@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>炼金术士的熔炉 - 机制原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* 左侧：材料库 */
+        .materials-panel {
+            width: 280px;
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            color: #0f3460;
+            background: #e94560;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .material-category {
+            margin-bottom: 15px;
+        }
+        
+        .category-name {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .material-card {
+            aspect-ratio: 1;
+            background: #0f3460;
+            border: 2px solid #1a1a2e;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            text-align: center;
+            padding: 4px;
+        }
+        
+        .material-card:hover {
+            border-color: #e94560;
+            transform: scale(1.05);
+        }
+        
+        .material-card.selected {
+            border-color: #e94560;
+            background: #e94560;
+            color: #fff;
+        }
+        
+        .material-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+        
+        .material-name {
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        
+        /* 中间：合成釜区域 */
+        .reactors-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .reactor {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #0f3460;
+        }
+        
+        .reactor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .reactor-name {
+            font-size: 18px;
+            color: #e94560;
+        }
+        
+        .reactor-info {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .slots-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .input-slots {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .slot {
+            width: 80px;
+            height: 80px;
+            background: #0f3460;
+            border: 2px dashed #533483;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .slot:hover {
+            border-color: #e94560;
+        }
+        
+        .slot.filled {
+            border-style: solid;
+            border-color: #e94560;
+            background: #1a1a2e;
+        }
+        
+        .slot-label {
+            position: absolute;
+            top: -20px;
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .slot-content {
+            font-size: 24px;
+        }
+        
+        .slot-material {
+            font-size: 10px;
+            margin-top: 4px;
+            text-align: center;
+        }
+        
+        .arrow {
+            font-size: 24px;
+            color: #e94560;
+        }
+        
+        .output-slots {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 200px;
+        }
+        
+        .output-slot {
+            width: 60px;
+            height: 60px;
+            background: #1a1a2e;
+            border: 2px solid #533483;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .output-slot.has-result {
+            border-color: #4ecca3;
+            background: #0f3460;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .param-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f3460;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+        
+        .param-label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .param-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .param-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            background: #1a1a2e;
+            border: 1px solid #533483;
+            color: #eee;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .param-btn:hover {
+            border-color: #e94560;
+        }
+        
+        .param-btn.active {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        
+        .action-btn {
+            padding: 10px 25px;
+            font-size: 14px;
+            background: #e94560;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #ff6b6b;
+        }
+        
+        .action-btn:disabled {
+            background: #533483;
+            cursor: not-allowed;
+        }
+        
+        .clear-btn {
+            padding: 8px 15px;
+            font-size: 12px;
+            background: #533483;
+            border: none;
+            color: #eee;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        
+        /* 右侧：配方图鉴 */
+        .recipes-panel {
+            width: 350px;
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .recipes-filter {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 5px 12px;
+            font-size: 11px;
+            background: #0f3460;
+            border: 1px solid #533483;
+            color: #eee;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .filter-btn.active {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        
+        .recipes-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .recipe-item {
+            background: #0f3460;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #533483;
+        }
+        
+        .recipe-item.discovered {
+            border-left-color: #4ecca3;
+        }
+        
+        .recipe-item.undiscovered {
+            opacity: 0.6;
+        }
+        
+        .recipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .recipe-name {
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .recipe-probability {
+            font-size: 11px;
+            color: #4ecca3;
+        }
+        
+        .recipe-formula {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #888;
+            flex-wrap: wrap;
+        }
+        
+        .recipe-arrow {
+            color: #e94560;
+        }
+        
+        .recipe-tags {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            font-size: 9px;
+            padding: 2px 6px;
+            background: #1a1a2e;
+            border-radius: 3px;
+            color: #aaa;
+        }
+        
+        /* 日志区域 */
+        .log-panel {
+            margin-top: 20px;
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .log-content {
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #aaa;
+        }
+        
+        .log-entry {
+            padding: 3px 0;
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        .log-entry.success {
+            color: #4ecca3;
+        }
+        
+        .log-entry.discovery {
+            color: #e94560;
+            font-weight: bold;
+        }
+        
+        /* 提示 */
+        .hint {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #533483;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚗️ 炼金术士的熔炉</h1>
+    <p class="subtitle">机制原型演示 | 点击材料选择，再点击槽位放入</p>
+    
+    <div class="main-container">
+        <!-- 左侧材料库 -->
+        <div class="materials-panel">
+            <div class="panel-title">📦 材料库（无限）</div>
+            
+            <div class="material-category">
+                <div class="category-name">金属矿物</div>
+                <div class="materials-grid">
+                    <div class="material-card" data-material="hematite" onclick="selectMaterial('hematite')">
+                        <div class="material-icon">🪨</div>
+                        <div class="material-name">赤铁矿</div>
+                    </div>
+                    <div class="material-card" data-material="pyrite" onclick="selectMaterial('pyrite')">
+                        <div class="material-icon">✨</div>
+                        <div class="material-name">黄铁矿</div>
+                    </div>
+                    <div class="material-card" data-material="malachite" onclick="selectMaterial('malachite')">
+                        <div class="material-icon">🟢</div>
+                        <div class="material-name">孔雀石</div>
+                    </div>
+                    <div class="material-card" data-material="bauxite" onclick="selectMaterial('bauxite')">
+                        <div class="material-icon">🟤</div>
+                        <div class="material-name">铝土矿</div>
+                    </div>
+                    <div class="material-card" data-material="gold_sand" onclick="selectMaterial('gold_sand')">
+                        <div class="material-icon">🌟</div>
+                        <div class="material-name">金砂</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="material-category">
+                <div class="category-name">非金属</div>
+                <div class="materials-grid">
+                    <div class="material-card" data-material="graphite" onclick="selectMaterial('graphite')">
+                        <div class="material-icon">⬛</div>
+                        <div class="material-name">石墨</div>
+                    </div>
+                    <div class="material-card" data-material="sulfur" onclick="selectMaterial('sulfur')">
+                        <div class="material-icon">🟡</div>
+                        <div class="material-name">硫磺</div>
+                    </div>
+                    <div class="material-card" data-material="limestone" onclick="selectMaterial('limestone')">
+                        <div class="material-icon">⬜</div>
+                        <div class="material-name">石灰石</div>
+                    </div>
+                    <div class="material-card" data-material="quartz" onclick="selectMaterial('quartz')">
+                        <div class="material-icon">💎</div>
+                        <div class="material-name">石英砂</div>
+                    </div>
+                    <div class="material-card" data-material="salt" onclick="selectMaterial('salt')">
+                        <div class="material-icon">🧂</div>
+                        <div class="material-name">岩盐</div>
+                    </div>
+                    <div class="material-card" data-material="clay" onclick="selectMaterial('clay')">
+                        <div class="material-icon">🟫</div>
+                        <div class="material-name">黏土</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="material-category">
+                <div class="category-name">气体/其他</div>
+                <div class="materials-grid">
+                    <div class="material-card" data-material="air" onclick="selectMaterial('air')">
+                        <div class="material-icon">💨</div>
+                        <div class="material-name">空气</div>
+                    </div>
+                    <div class="material-card" data-material="natural_gas" onclick="selectMaterial('natural_gas')">
+                        <div class="material-icon">🔥</div>
+                        <div class="material-name">天然气</div>
+                    </div>
+                    <div class="material-card" data-material="water" onclick="selectMaterial('water')">
+                        <div class="material-icon">💧</div>
+                        <div class="material-name">水</div>
+                    </div>
+                    <div class="material-card" data-material="flux_dust" onclick="selectMaterial('flux_dust')">
+                        <div class="material-icon">🌌</div>
+                        <div class="material-name">虚境粉尘</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="material-category">
+                <div class="category-name">产物（也可作为原料）</div>
+                <div class="materials-grid">
+                    <div class="material-card" data-material="iron" onclick="selectMaterial('iron')">
+                        <div class="material-icon">🔩</div>
+                        <div class="material-name">生铁</div>
+                    </div>
+                    <div class="material-card" data-material="steel" onclick="selectMaterial('steel')">
+                        <div class="material-icon">⚙️</div>
+                        <div class="material-name">钢</div>
+                    </div>
+                    <div class="material-card" data-material="copper" onclick="selectMaterial('copper')">
+                        <div class="material-icon">🟠</div>
+                        <div class="material-name">铜</div>
+                    </div>
+                    <div class="material-card" data-material="sulfuric_acid" onclick="selectMaterial('sulfuric_acid')">
+                        <div class="material-icon">🧪</div>
+                        <div class="material-name">硫酸</div>
+                    </div>
+                    <div class="material-card" data-material="silicon" onclick="selectMaterial('silicon')">
+                        <div class="material-icon">💻</div>
+                        <div class="material-name">硅</div>
+                    </div>
+                    <div class="material-card" data-material="flux_steel" onclick="selectMaterial('flux_steel')">
+                        <div class="material-icon">🔮</div>
+                        <div class="material-name">虚境钢</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 中间合成釜 -->
+        <div class="reactors-panel">
+            <!-- 基础熔炼釜 -->
+            <div class="reactor" data-reactor="basic">
+                <div class="reactor-header">
+                    <span class="reactor-name">🔥 基础熔炼釜</span>
+                    <span class="reactor-info">槽位: 2 | 并行: 1-2</span>
+                </div>
+                
+                <div class="slots-container">
+                    <div class="input-slots">
+                        <div class="slot" data-slot="0" onclick="placeMaterial('basic', 0)">
+                            <span class="slot-label">槽1</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                        <div class="slot" data-slot="1" onclick="placeMaterial('basic', 1)">
+                            <span class="slot-label">槽2</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                    </div>
+                    
+                    <span class="arrow">→</span>
+                    
+                    <div class="output-slots" id="basic-output">
+                        <div class="output-slot">
+                            <span>?</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="param-control">
+                        <span class="param-label">温度:</span>
+                        <div class="param-buttons">
+                            <button class="param-btn" onclick="setParam('basic', 'temp', 'low')">低</button>
+                            <button class="param-btn active" onclick="setParam('basic', 'temp', 'medium')">中</button>
+                            <button class="param-btn" onclick="setParam('basic', 'temp', 'high')">高</button>
+                        </div>
+                    </div>
+                    
+                    <button class="action-btn" onclick="synthesize('basic')">开始合成</button>
+                    <button class="clear-btn" onclick="clearReactor('basic')">清空</button>
+                </div>
+            </div>
+            
+            <!-- 高压合成釜 -->
+            <div class="reactor" data-reactor="highpressure">
+                <div class="reactor-header">
+                    <span class="reactor-name">⚡ 高压合成釜</span>
+                    <span class="reactor-info">槽位: 3 | 并行: 2-3</span>
+                </div>
+                
+                <div class="slots-container">
+                    <div class="input-slots">
+                        <div class="slot" data-slot="0" onclick="placeMaterial('highpressure', 0)">
+                            <span class="slot-label">槽1</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                        <div class="slot" data-slot="1" onclick="placeMaterial('highpressure', 1)">
+                            <span class="slot-label">槽2</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                        <div class="slot" data-slot="2" onclick="placeMaterial('highpressure', 2)">
+                            <span class="slot-label">槽3</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                    </div>
+                    
+                    <span class="arrow">→</span>
+                    
+                    <div class="output-slots" id="highpressure-output">
+                        <div class="output-slot">
+                            <span>?</span>
+                        </div>
+                        <div class="output-slot">
+                            <span>?</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="param-control">
+                        <span class="param-label">温度:</span>
+                        <div class="param-buttons">
+                            <button class="param-btn" onclick="setParam('highpressure', 'temp', 'low')">低</button>
+                            <button class="param-btn" onclick="setParam('highpressure', 'temp', 'medium')">中</button>
+                            <button class="param-btn active" onclick="setParam('highpressure', 'temp', 'high')">高</button>
+                            <button class="param-btn" onclick="setParam('highpressure', 'temp', 'extreme')">极高</button>
+                        </div>
+                    </div>
+                    
+                    <div class="param-control">
+                        <span class="param-label">压力:</span>
+                        <div class="param-buttons">
+                            <button class="param-btn" onclick="setParam('highpressure', 'pressure', 'low')">低</button>
+                            <button class="param-btn" onclick="setParam('highpressure', 'pressure', 'medium')">中</button>
+                            <button class="param-btn active" onclick="setParam('highpressure', 'pressure', 'high')">高</button>
+                        </div>
+                    </div>
+                    
+                    <button class="action-btn" onclick="synthesize('highpressure')">开始合成</button>
+                    <button class="clear-btn" onclick="clearReactor('highpressure')">清空</button>
+                </div>
+            </div>
+            
+            <!-- 虚境调和釜 -->
+            <div class="reactor" data-reactor="flux">
+                <div class="reactor-header">
+                    <span class="reactor-name">🌌 虚境调和釜</span>
+                    <span class="reactor-info">槽位: 3 | 并行: 3 | 需虚境材料</span>
+                </div>
+                
+                <div class="slots-container">
+                    <div class="input-slots">
+                        <div class="slot" data-slot="0" onclick="placeMaterial('flux', 0)">
+                            <span class="slot-label">槽1</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                        <div class="slot" data-slot="1" onclick="placeMaterial('flux', 1)">
+                            <span class="slot-label">槽2</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                        <div class="slot" data-slot="2" onclick="placeMaterial('flux', 2)">
+                            <span class="slot-label">槽3</span>
+                            <span class="slot-content">+</span>
+                        </div>
+                    </div>
+                    
+                    <span class="arrow">→</span>
+                    
+                    <div class="output-slots" id="flux-output">
+                        <div class="output-slot">
+                            <span>?</span>
+                        </div>
+                        <div class="output-slot">
+                            <span>?</span>
+                        </div>
+                        <div class="output-slot">
+                            <span>?</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="param-control">
+                        <span class="param-label">温度:</span>
+                        <div class="param-buttons">
+                            <button class="param-btn" onclick="setParam('flux', 'temp', 'low')">低</button>
+                            <button class="param-btn" onclick="setParam('flux', 'temp', 'medium')">中</button>
+                            <button class="param-btn active" onclick="setParam('flux', 'temp', 'high')">高</button>
+                        </div>
+                    </div>
+                    
+                    <div class="param-control">
+                        <span class="param-label">虚境共鸣:</span>
+                        <div class="param-buttons">
+                            <button class="param-btn" onclick="setParam('flux', 'flux', 'none')">关</button>
+                            <button class="param-btn" onclick="setParam('flux', 'flux', 'low')">低</button>
+                            <button class="param-btn active" onclick="setParam('flux', 'flux', 'high')">高</button>
+                        </div>
+                    </div>
+                    
+                    <button class="action-btn" onclick="synthesize('flux')">开始合成</button>
+                    <button class="clear-btn" onclick="clearReactor('flux')">清空</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧配方图鉴 -->
+        <div class="recipes-panel">
+            <div class="panel-title">📖 配方图鉴</div>
+            
+            <div class="recipes-filter">
+                <button class="filter-btn active" onclick="filterRecipes('all')">全部</button>
+                <button class="filter-btn" onclick="filterRecipes('discovered')">已发现</button>
+                <button class="filter-btn" onclick="filterRecipes('metal')">金属</button>
+                <button class="filter-btn" onclick="filterRecipes('chemical')">化工</button>
+            </div>
+            
+            <div class="recipes-list" id="recipes-list">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 日志面板 -->
+    <div class="log-panel">
+        <div class="panel-title">📝 合成日志</div>
+        <div class="log-content" id="log-content">
+            <div class="log-entry">欢迎使用炼金术士的熔炉！选择材料放入合成釜，点击"开始合成"进行实验。</div>
+        </div>
+    </div>
+    
+    <p class="hint">💡 提示：放入3种不同材料可激活并行生产，一次获得多个产物！</p>
+
+    <script>
+        // ==================== 材料数据库 ====================
+        const materials = {
+            // 金属矿物
+            hematite: { name: '赤铁矿', icon: '🪨', tags: ['metal', 'oxide', 'high_melt'] },
+            pyrite: { name: '黄铁矿', icon: '✨', tags: ['metal', 'flammable', 'acidic'] },
+            malachite: { name: '孔雀石', icon: '🟢', tags: ['metal', 'basic', 'brittle'] },
+            bauxite: { name: '铝土矿', icon: '🟤', tags: ['metal', 'basic', 'high_melt'] },
+            gold_sand: { name: '金砂', icon: '🌟', tags: ['metal', 'inert', 'high_density'] },
+            
+            // 非金属
+            graphite: { name: '石墨', icon: '⬛', tags: ['nonmetal', 'flammable', 'conductive'] },
+            sulfur: { name: '硫磺', icon: '🟡', tags: ['nonmetal', 'flammable', 'acidic'] },
+            limestone: { name: '石灰石', icon: '⬜', tags: ['nonmetal', 'basic', 'high_melt'] },
+            quartz: { name: '石英砂', icon: '💎', tags: ['nonmetal', 'high_melt', 'brittle'] },
+            salt: { name: '岩盐', icon: '🧂', tags: ['nonmetal', 'halogen', 'hygroscopic'] },
+            clay: { name: '黏土', icon: '🟫', tags: ['nonmetal', 'hygroscopic', 'plastic'] },
+            
+            // 气体/其他
+            air: { name: '空气', icon: '💨', tags: ['gas', 'oxidizing', 'inert'] },
+            natural_gas: { name: '天然气', icon: '🔥', tags: ['gas', 'flammable', 'nonmetal'] },
+            water: { name: '水', icon: '💧', tags: ['liquid', 'neutral', 'solvent'] },
+            flux_dust: { name: '虚境粉尘', icon: '🌌', tags: ['flux', 'unstable', 'high_energy'] },
+            
+            // 产物
+            iron: { name: '生铁', icon: '🔩', tags: ['metal', 'product'] },
+            steel: { name: '钢', icon: '⚙️', tags: ['metal', 'product', 'high_strength'] },
+            copper: { name: '铜', icon: '🟠', tags: ['metal', 'product', 'conductive'] },
+            sulfuric_acid: { name: '硫酸', icon: '🧪', tags: ['liquid', 'product', 'acidic', 'corrosive'] },
+            silicon: { name: '硅', icon: '💻', tags: ['nonmetal', 'product', 'semiconductor'] },
+            flux_steel: { name: '虚境钢', icon: '🔮', tags: ['metal', 'product', 'flux_contaminated'] },
+            slag: { name: '炉渣', icon: '🗿', tags: ['waste', 'basic'] },
+            co2: { name: 'CO₂', icon: '☁️', tags: ['gas', 'waste'] },
+            mixture: { name: '混合物', icon: '📦', tags: ['unrefined'] },
+            flux_residue: { name: '虚境残留物', icon: '✨', tags: ['flux', 'research'] }
+        };
+        
+        // ==================== 配方数据库 ====================
+        const recipes = [
+            // 钢铁类
+            {
+                id: 'iron_basic',
+                name: '高炉炼铁',
+                inputs: ['hematite', 'graphite'],
+                outputs: [
+                    { material: 'iron', probability: 70, conditions: { temp: 'high' } },
+                    { material: 'slag', probability: 25, conditions: { temp: 'high' } },
+                    { material: 'co2', probability: 5, conditions: {} }
+                ],
+                category: 'metal',
+                discovered: false
+            },
+            {
+                id: 'steel_basic',
+                name: '炼钢',
+                inputs: ['iron', 'graphite'],
+                outputs: [
+                    { material: 'steel', probability: 75, conditions: { temp: 'high' } },
+                    { material: 'co2', probability: 20, conditions: { temp: 'high' } },
+                    { material: 'iron', probability: 5, conditions: { temp: 'medium' } }
+                ],
+                category: 'metal',
+                discovered: false
+            },
+            {
+                id: 'flux_steel',
+                name: '虚境强化钢',
+                inputs: ['iron', 'flux_dust'],
+                outputs: [
+                    { material: 'flux_steel', probability: 50, conditions: { flux: 'high' } },
+                    { material: 'steel', probability: 30, conditions: { flux: 'low' } },
+                    { material: 'flux_residue', probability: 15, conditions: { flux: 'high' } },
+                    { material: 'mixture', probability: 5, conditions: {} }
+                ],
+                category: 'metal',
+                discovered: false
+            },
+            {
+                id: 'copper_smelt',
+                name: '炼铜',
+                inputs: ['malachite', 'graphite'],
+                outputs: [
+                    { material: 'copper', probability: 80, conditions: { temp: 'high' } },
+                    { material: 'co2', probability: 15, conditions: {} },
+                    { material: 'slag', probability: 5, conditions: {} }
+                ],
+                category: 'metal',
+                discovered: false
+            },
+            
+            // 化工类
+            {
+                id: 'sulfuric_contact',
+                name: '接触法制硫酸',
+                inputs: ['sulfur', 'air', 'water'],
+                outputs: [
+                    { material: 'sulfuric_acid', probability: 75, conditions: { temp: 'high' } },
+                    { material: 'co2', probability: 20, conditions: {} },
+                    { material: 'mixture', probability: 5, conditions: { temp: 'low' } }
+                ],
+                category: 'chemical',
+                discovered: false
+            },
+            {
+                id: 'sulfuric_pyrite',
+                name: '黄铁矿制硫酸',
+                inputs: ['pyrite', 'air', 'water'],
+                outputs: [
+                    { material: 'sulfuric_acid', probability: 60, conditions: { temp: 'high', pressure: 'high' } },
+                    { material: 'hematite', probability: 25, conditions: { temp: 'high' } },
+                    { material: 'co2', probability: 10, conditions: {} },
+                    { material: 'mixture', probability: 5, conditions: {} }
+                ],
+                category: 'chemical',
+                discovered: false
+            },
+            
+            // 硅类
+            {
+                id: 'silicon_rough',
+                name: '粗硅制备',
+                inputs: ['quartz', 'graphite'],
+                outputs: [
+                    { material: 'silicon', probability: 70, conditions: { temp: 'extreme' } },
+                    { material: 'co2', probability: 25, conditions: { temp: 'high' } },
+                    { material: 'mixture', probability: 5, conditions: { temp: 'medium' } }
+                ],
+                category: 'chemical',
+                discovered: false
+            },
+            {
+                id: 'silicon_flux',
+                name: '虚境纯硅',
+                inputs: ['quartz', 'flux_dust'],
+                outputs: [
+                    { material: 'silicon', probability: 60, conditions: { flux: 'high' } },
+                    { material: 'flux_residue', probability: 30, conditions: { flux: 'high' } },
+                    { material: 'mixture', probability: 10, conditions: {} }
+                ],
+                category: 'chemical',
+                discovered: false
+            },
+            
+            // 其他
+            {
+                id: 'gold_extract',
+                name: '提金',
+                inputs: ['gold_sand', 'sulfuric_acid'],
+                outputs: [
+                    { material: 'gold_sand', probability: 90, conditions: { temp: 'medium' } },
+                    { material: 'mixture', probability: 10, conditions: { temp: 'high' } }
+                ],
+                category: 'metal',
+                discovered: false
+            }
+        ];
+        
+        // ==================== 状态管理 ====================
+        let selectedMaterial = null;
+        const reactorStates = {
+            basic: { slots: [null, null], params: { temp: 'medium' }, outputs: [] },
+            highpressure: { slots: [null, null, null], params: { temp: 'high', pressure: 'high' }, outputs: [] },
+            flux: { slots: [null, null, null], params: { temp: 'high', flux: 'high' }, outputs: [] }
+        };
+        
+        // ==================== 核心函数 ====================
+        
+        // 选择材料
+        function selectMaterial(materialId) {
+            selectedMaterial = materialId;
+            
+            // 更新UI
+            document.querySelectorAll('.material-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-material="${materialId}"]`).classList.add('selected');
+            
+            log(`选择了: ${materials[materialId].name}`);
+        }
+        
+        // 放入材料
+        function placeMaterial(reactorId, slotIndex) {
+            if (!selectedMaterial) {
+                log('请先选择一种材料！', 'error');
+                return;
+            }
+            
+            reactorStates[reactorId].slots[slotIndex] = selectedMaterial;
+            updateReactorUI(reactorId);
+            log(`将 ${materials[selectedMaterial].name} 放入 ${reactorId === 'basic' ? '基础熔炼釜' : reactorId === 'highpressure' ? '高压合成釜' : '虚境调和釜'} 槽${slotIndex + 1}`);
+        }
+        
+        // 设置参数
+        function setParam(reactorId, param, value) {
+            reactorStates[reactorId].params[param] = value;
+            
+            // 更新按钮状态
+            const reactor = document.querySelector(`[data-reactor="${reactorId}"]`);
+            reactor.querySelectorAll(`.param-btn`).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            log(`设置 ${reactorId === 'basic' ? '基础熔炼釜' : reactorId === 'highpressure' ? '高压合成釜' : '虚境调和釜'} 参数: ${param} = ${value}`);
+        }
+        
+        // 合成！
+        function synthesize(reactorId) {
+            const state = reactorStates[reactorId];
+            const filledSlots = state.slots.filter(s => s !== null);
+            
+            if (filledSlots.length === 0) {
+                log('请先放入材料！', 'error');
+                return;
+            }
+            
+            // 计算并行度
+            const uniqueMaterials = [...new Set(filledSlots)];
+            let parallelism = 1;
+            if (reactorId === 'basic') {
+                parallelism = uniqueMaterials.length >= 2 ? 2 : 1;
+            } else if (reactorId === 'highpressure') {
+                parallelism = uniqueMaterials.length >= 3 ? 3 : 2;
+            } else if (reactorId === 'flux') {
+                parallelism = uniqueMaterials.length >= 3 ? 3 : 2;
+            }
+            
+            // 匹配配方
+            const matchedRecipes = matchRecipes(filledSlots, state.params);
+            
+            if (matchedRecipes.length === 0) {
+                // 无匹配配方，产出混合物
+                state.outputs = Array(parallelism).fill('mixture');
+                log(`未找到匹配配方，产出 ${parallelism} 个混合物`);
+            } else {
+                // 按权重随机抽取
+                state.outputs = [];
+                const discoveredRecipes = [];
+                
+                for (let i = 0; i < parallelism; i++) {
+                    const result = drawFromPool(matchedRecipes, state.params);
+                    state.outputs.push(result.material);
+                    
+                    // 标记配方为已发现
+                    const recipe = matchedRecipes.find(r => r.outputs.some(o => o.material === result.material));
+                    if (recipe && !recipe.discovered) {
+                        recipe.discovered = true;
+                        discoveredRecipes.push(recipe.name);
+                    }
+                }
+                
+                if (discoveredRecipes.length > 0) {
+                    log(`🎉 发现了新配方: ${[...new Set(discoveredRecipes)].join(', ')}！`, 'discovery');
+                }
+                
+                log(`合成成功！产出: ${state.outputs.map(o => materials[o].name).join(', ')}`, 'success');
+            }
+            
+            updateReactorUI(reactorId);
+            updateRecipesList();
+        }
+        
+        // 匹配配方
+        function matchRecipes(inputs, params) {
+            return recipes.filter(recipe => {
+                // 检查输入是否匹配（允许超集）
+                const recipeInputs = [...recipe.inputs].sort();
+                const actualInputs = [...inputs].sort();
+                
+                // 检查是否包含所有必需输入
+                for (let input of recipeInputs) {
+                    if (!actualInputs.includes(input)) {
+                        return false;
+                    }
+                }
+                
+                // 检查参数条件（如果有）
+                for (let output of recipe.outputs) {
+                    if (output.conditions) {
+                        const conditions = output.conditions;
+                        let match = true;
+                        for (let [key, value] of Object.entries(conditions)) {
+                            if (params[key] !== value) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) return true;
+                    } else {
+                        return true;
+                    }
+                }
+                
+                return true;
+            });
+        }
+        
+        // 从产物池抽取
+        function drawFromPool(matchedRecipes, params) {
+            // 构建产物池
+            let pool = [];
+            
+            for (let recipe of matchedRecipes) {
+                for (let output of recipe.outputs) {
+                    let weight = output.probability;
+                    
+                    // 参数匹配加成
+                    if (output.conditions) {
+                        let matchCount = 0;
+                        for (let [key, value] of Object.entries(output.conditions)) {
+                            if (params[key] === value) {
+                                matchCount++;
+                            }
+                        }
+                        weight *= (1 + matchCount * 0.3); // 参数匹配加成30%
+                    }
+                    
+                    // 已发现配方加成
+                    if (recipe.discovered) {
+                        weight *= 1.2; // 20%加成
+                    }
+                    
+                    pool.push({
+                        material: output.material,
+                        weight: weight,
+                        recipe: recipe
+                    });
+                }
+            }
+            
+            // 按权重随机抽取
+            const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
+            let random = Math.random() * totalWeight;
+            
+            for (let item of pool) {
+                random -= item.weight;
+                if (random <= 0) {
+                    return item;
+                }
+            }
+            
+            return pool[0];
+        }
+        
+        // 清空合成釜
+        function clearReactor(reactorId) {
+            reactorStates[reactorId].slots = reactorStates[reactorId].slots.map(() => null);
+            reactorStates[reactorId].outputs = [];
+            updateReactorUI(reactorId);
+            log(`清空 ${reactorId === 'basic' ? '基础熔炼釜' : reactorId === 'highpressure' ? '高压合成釜' : '虚境调和釜'}`);
+        }
+        
+        // 更新合成釜UI
+        function updateReactorUI(reactorId) {
+            const state = reactorStates[reactorId];
+            const reactor = document.querySelector(`[data-reactor="${reactorId}"]`);
+            
+            // 更新输入槽
+            state.slots.forEach((material, index) => {
+                const slot = reactor.querySelector(`[data-slot="${index}"]`);
+                if (material) {
+                    slot.classList.add('filled');
+                    slot.innerHTML = `
+                        <span class="slot-label">槽${index + 1}</span>
+                        <span class="slot-content">${materials[material].icon}</span>
+                        <span class="slot-material">${materials[material].name}</span>
+                    `;
+                } else {
+                    slot.classList.remove('filled');
+                    slot.innerHTML = `
+                        <span class="slot-label">槽${index + 1}</span>
+                        <span class="slot-content">+</span>
+                    `;
+                }
+            });
+            
+            // 更新输出槽
+            const outputContainer = document.getElementById(`${reactorId}-output`);
+            if (state.outputs.length > 0) {
+                outputContainer.innerHTML = state.outputs.map(out => `
+                    <div class="output-slot has-result">
+                        <div style="font-size: 24px;">${materials[out].icon}</div>
+                        <div style="font-size: 10px;">${materials[out].name}</div>
+                    </div>
+                `).join('');
+            } else {
+                const defaultSlots = reactorId === 'basic' ? 1 : reactorId === 'highpressure' ? 2 : 3;
+                outputContainer.innerHTML = Array(defaultSlots).fill(0).map(() => `
+                    <div class="output-slot">
+                        <span>?</span>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // 更新配方列表
+        function updateRecipesList() {
+            const list = document.getElementById('recipes-list');
+            const filter = document.querySelector('.filter-btn.active').textContent;
+            
+            let filteredRecipes = recipes;
+            if (filter === '已发现') {
+                filteredRecipes = recipes.filter(r => r.discovered);
+            } else if (filter === '金属') {
+                filteredRecipes = recipes.filter(r => r.category === 'metal');
+            } else if (filter === '化工') {
+                filteredRecipes = recipes.filter(r => r.category === 'chemical');
+            }
+            
+            list.innerHTML = filteredRecipes.map(recipe => {
+                const inputNames = recipe.inputs.map(i => materials[i]?.name || i).join(' + ');
+                const outputNames = recipe.outputs.map(o => `${materials[o.material]?.name || o.material}(${o.probability}%)`).join(' / ');
+                
+                return `
+                    <div class="recipe-item ${recipe.discovered ? 'discovered' : 'undiscovered'}">
+                        <div class="recipe-header">
+                            <span class="recipe-name">${recipe.discovered ? '✓ ' : '? '}${recipe.name}</span>
+                            <span class="recipe-probability">${recipe.discovered ? '已发现' : '未发现'}</span>
+                        </div>
+                        <div class="recipe-formula">
+                            ${inputNames} <span class="recipe-arrow">→</span> ${outputNames}
+                        </div>
+                        <div class="recipe-tags">
+                            ${recipe.inputs.map(i => `<span class="tag">${materials[i]?.name || i}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 筛选配方
+        function filterRecipes(type) {
+            document.querySelectorAll('.recipes-filter .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            updateRecipesList();
+        }
+        
+        // 日志
+        function log(message, type = '') {
+            const logContent = document.getElementById('log-content');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContent.insertBefore(entry, logContent.firstChild);
+            
+            // 限制日志数量
+            while (logContent.children.length > 50) {
+                logContent.removeChild(logContent.lastChild);
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRecipesList();
+            log('系统初始化完成。材料库已加载 ' + Object.keys(materials).length + ' 种材料');
+            log('配方数据库已加载 ' + recipes.length + ' 个配方');
+        });
+    </script>
+</body>
+</html>
