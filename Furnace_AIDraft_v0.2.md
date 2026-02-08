@@ -1,3 +1,16 @@
+---
+title: 《熔炉》游戏策划案 v0.2
+lastUpdate: 2026-02-08
+tags:
+   - game-design
+   - resource-management
+   - factory-building
+   - card-game
+description: 融合工厂建造与卡牌抽取机制的资源管理游戏策划文档
+status: draft
+version: 0.2
+---
+
 # 《熔炉》游戏策划案 ?
 
 ## 一、游戏定位
